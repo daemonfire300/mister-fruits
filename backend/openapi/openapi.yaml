@@ -1,0 +1,244 @@
+openapi: 3.0.0
+info:
+  title: Mister Fruits API
+  description: Mister Fruits eCommerce Dummy Shop API
+  version: 0.0.1
+servers:
+  - url: http://api.example.com/v1
+    description: Optional server description, e.g. Main (production) server
+  - url: http://staging-api.example.com
+    description: Optional server description, e.g. Internal staging server for testing
+paths:
+  /login:
+    post:
+      summary: Login
+      description: ...
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: ...
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Token"
+        "401":
+          description: Login failed
+  /signup:
+    post:
+      summary: Signup
+      description: ...
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: A JSON array of user names
+        "401":
+          description: Signup failed
+  /products:
+    get:
+      summary: List all products
+      responses:
+        "200":
+          description: List containing all products
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Products"
+  /products/{id}:
+    get:
+      summary: Get Product Details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product Information
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Product"
+  /carts/{id}/coupon/{couponId}:
+    post:
+      summary: Apply coupon to cart
+      description: ...
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: couponId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart Information
+  /carts/{id}/checkout:
+    post:
+      summary: Checkout/pay for cart
+      description: ...
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart Information
+  /carts/{id}:
+    get:
+      summary: Get shopping cart
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart Information
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Cart"
+        "404":
+          description: Not found
+    post:
+      summary: Create cart
+      description: ...
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart Information
+          content:
+            application/json:
+              schema:
+                description: Returns the updated cart (discount(s) applied)
+                type: object
+                $ref: "#/components/schemas/Cart"
+    patch:
+      summary: Update cart
+      description: ...
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CartItem"
+                remove:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CartItem"
+      responses:
+        "200":
+          description: Cart Information
+          content:
+            application/json:
+              schema:
+                description: Returns the updated cart (discount(s) applied)
+                type: object
+                $ref: "#/components/schemas/Cart"
+
+components:
+  schemas:
+    Coupon:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    CartSet:
+      type: object
+      properties:
+        grossPrice:
+          type: number
+        coupons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coupon"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: string
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartSet"
+
+    Token:
+      description: Access token, oauth, whatever fake object
+      type: object
+      properties:
+        value:
+          type: string
+
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+
+    Products:
+      type: array
+      items:
+        $ref: "#/components/schemas/Product"
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        grossPrice:
+          type: integer
