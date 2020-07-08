@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"sync"
 
 	"github.com/google/uuid"
@@ -34,17 +35,16 @@ func (i *InMemoryStore) Check(username, password string) error {
 	return connector.ErrUserNotFound
 }
 
-func (i *InMemoryStore) CheckToken(username, token string) error {
+func (i *InMemoryStore) CheckToken(token string) (string, error) {
 	i.RLock()
 	defer i.RUnlock()
-	tok, ok := i.tokens[username]
-	if !ok {
-		return connector.ErrUserNotFound
+	for username, tok := range i.tokens {
+		if tok.Value != token {
+			continue
+		}
+		return username, nil
 	}
-	if tok.Value != token {
-		return connector.ErrInvalidCredentials
-	}
-	return nil
+	return "", connector.ErrInvalidCredentials
 }
 
 func (i *InMemoryStore) GenerateToken(username string) (model.Token, error) {
