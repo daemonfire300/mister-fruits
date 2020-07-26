@@ -7,11 +7,11 @@ import (
 	"github.com/daemonfire/mister-fruits/internal/model"
 )
 
-type CartStore interface {
-	FindCart(ctx context.Context, ownerID, cartID string) (model.Cart, error)
-	CreateOrUpdateCart(ctx context.Context, ownerID, cartID string, cart model.Cart) error
+type CouponStore interface {
+	FindCoupon(ctx context.Context, ownerID, couponID string) (model.Coupon, error)
+	CreateOrUpdateCoupon(ctx context.Context, ownerID, couponID string, coupon model.Coupon) error
 }
 
 var (
-	ErrCartNotFound = errors.New("error: cart not found")
+	ErrCouponNotFound = errors.New("error: coupon not found")
 )

@@ -1,14 +1,15 @@
 package connector
 
 import (
+	"context"
 	"errors"
 
 	"github.com/daemonfire/mister-fruits/internal/model"
 )
 
 type UserStore interface {
-	FindUser(username string) (model.User, error)
-	StoreUser(user model.User) error
+	FindUser(ctx context.Context, username string) (model.User, error)
+	StoreUser(ctx context.Context, user model.User) error
 }
 
 var (

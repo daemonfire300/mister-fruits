@@ -17,6 +17,7 @@ type UserController struct {
 }
 
 func (c *UserController) Signup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	defer r.Body.Close()
 	dec := json.NewDecoder(r.Body)
 	var user model.User
@@ -26,13 +27,13 @@ func (c *UserController) Signup(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err = c.UserStore.FindUser(user.Username)
+	_, err = c.UserStore.FindUser(ctx, user.Username)
 	if err != nil && !errors.Is(err, connector.ErrUserNotFound) {
 		log.Println(fmt.Sprintf("error during user retrieval: %v", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = c.UserStore.StoreUser(user)
+	err = c.UserStore.StoreUser(ctx, user)
 	if err != nil {
 		log.Println(fmt.Sprintf("error while persisting user: %v", err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -42,6 +43,7 @@ func (c *UserController) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	defer r.Body.Close()
 	dec := json.NewDecoder(r.Body)
 	var user model.User
@@ -51,7 +53,7 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err = c.UserStore.FindUser(user.Username)
+	_, err = c.UserStore.FindUser(ctx, user.Username)
 	if err != nil && !errors.Is(err, connector.ErrUserNotFound) {
 		log.Println(fmt.Sprintf("error during user retrieval: %v", err))
 		w.WriteHeader(http.StatusInternalServerError)

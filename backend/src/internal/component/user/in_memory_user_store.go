@@ -63,7 +63,7 @@ func NewStore() *InMemoryStore {
 	}
 }
 
-func (i *InMemoryStore) FindUser(username string) (model.User, error) {
+func (i *InMemoryStore) FindUser(_ context.Context, username string) (model.User, error) {
 	i.RLock()
 	defer i.RUnlock()
 	for _, u := range i.users {
@@ -74,7 +74,7 @@ func (i *InMemoryStore) FindUser(username string) (model.User, error) {
 	return model.User{}, connector.ErrUserNotFound
 }
 
-func (i *InMemoryStore) StoreUser(user model.User) error {
+func (i *InMemoryStore) StoreUser(_ context.Context, user model.User) error {
 	i.Lock()
 	defer i.Unlock()
 	for _, u := range i.users {

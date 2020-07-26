@@ -1,18 +1,17 @@
 package connector
 
 import (
+	"context"
 	"errors"
 
 	"github.com/daemonfire/mister-fruits/internal/model"
 )
 
-type UserStore interface {
-	FindUser(username string) (model.User, error)
-	StoreUser(user model.User) error
+type ProductStore interface {
+	FindProduct(ctx context.Context, id string) (model.Product, error)
+	AllProducts(ctx context.Context) ([]model.Product, error)
 }
 
 var (
-	ErrUserAlreadyExists  = errors.New("error: user already exists")
-	ErrUserNotFound       = errors.New("error: user not found")
-	ErrInvalidCredentials = errors.New("error: invalid credentials")
+	ErrProductNotFound = errors.New("error: product not found")
 )

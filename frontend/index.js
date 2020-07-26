@@ -1,3 +1,9 @@
+function uuidv4() {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+}
+
 function SignupRequest(username, password) {
     return {
         username: username,
@@ -65,6 +71,69 @@ class CartAndProductService {
         }
         return []
     }
+
+    async createCart(token, id) {
+        const resp = await fetch(this.url + '/carts/' + id, {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({
+                id: id,
+                items: [],
+                coupons: [],
+            })
+        })
+        return resp.ok
+    }
+
+    async fetchCart(token, id) {
+        const resp = await fetch(this.url + '/carts/' + id, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+        })
+        if (resp.ok) {
+            return await resp.json()
+        }
+    }
+
+    async updateCart(token, id, add, remove) {
+        const resp = await fetch(this.url + '/carts/' + id, {
+            method: 'PATCH',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({
+                'add': add,
+                'remove': remove,
+            })
+        })
+        return resp.ok
+    }
+
+    async checkoutCart(token, id) {
+        const resp = await fetch(this.url + '/carts/' + id + '/checkout', {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+        return resp.ok
+    }
 }
 
 var userSvc = new UserService('http://localhost:8181')
@@ -81,11 +150,20 @@ var app = new Vue({
         userSvc: userSvc,
         cartAndProductSvc: cartAndProductSvc,
         products: [],
+        cartID: '',
+        cart: null,
+        currentCheckoutSum: 0.00
     },
     mounted() {
         if (localStorage.authToken) {
             this.authToken = localStorage.authToken;
             this.loadProducts()
+            if (localStorage.cartID) {
+                this.cartID = localStorage.cartID
+                if (this.cartID !== '') {
+                    this.loadCart()
+                }
+            }
         }
     },
     methods: {
@@ -123,6 +201,55 @@ var app = new Vue({
         },
         loadProducts: async function () {
             this.products = await this.cartAndProductSvc.listProducts(this.authToken)
+        },
+        loadCart: async function () {
+            this.cart = await this.cartAndProductSvc.fetchCart(this.authToken, this.cartID)
+            if (this.cart != null) {
+                let vueRoot = this
+                vueRoot.currentCheckoutSum = 0.00
+                this.cart.sets.forEach((set) => {
+                    vueRoot.currentCheckoutSum += Number(set.grossPrice)
+                })
+            }
+        },
+        addOrRemoveProduct: async function (productID, addFlag) {
+            if (this.cart == null) { // create cart if it does not exist
+                let id = uuidv4()
+                let res = await this.cartAndProductSvc.createCart(this.authToken, id)
+                if (!res) {
+                    console.log("error could not create cart...")
+                    return
+                }
+                this.cartID = id
+                localStorage.cartID = this.cartID
+            }
+            let remove = [];
+            let add = [];
+            let p = { product: { id: productID }, quantity: 1 };
+            if (addFlag) {
+                add.push(p)
+            } else {
+                remove.push(p)
+            }
+            let res = await this.cartAndProductSvc.updateCart(this.authToken, this.cartID, add, remove)
+            if (res) {
+                this.loadCart()
+            }
+        },
+        checkout: async function () {
+            res = await this.cartAndProductSvc.checkoutCart(this.authToken, this.cartID)
+            if (res) {
+                localStorage.cartID = ''
+                this.cartID = ''
+                this.cart = null
+            }
+        },
+        logout: function () {
+            localStorage.authToken = ''
+            this.authToken = ''
+            localStorage.cartID = ''
+            this.cartID = ''
+            this.cart = null
         }
     }
 })

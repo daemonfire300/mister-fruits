@@ -1,4 +1,4 @@
-package cart
+package coupon
 
 import (
 	"context"
@@ -8,40 +8,40 @@ import (
 	"github.com/daemonfire/mister-fruits/internal/model"
 )
 
-var _ connector.CartStore = (*InMemoryStore)(nil)
+var _ connector.CouponStore = (*InMemoryStore)(nil)
 
 type InMemoryStore struct {
 	sync.RWMutex
 
-	carts []model.Cart
+	coupons []model.Coupon
 }
 
 func NewStore() *InMemoryStore {
 	return &InMemoryStore{
-		carts: make([]model.Cart, 0),
+		coupons: make([]model.Coupon, 0),
 	}
 }
 
-func (i *InMemoryStore) CreateOrUpdateCart(_ context.Context, ownerID, cartID string, cart model.Cart) error {
+func (i *InMemoryStore) CreateOrUpdateCoupon(_ context.Context, ownerID, cartID string, coupon model.Coupon) error {
 	i.Lock()
 	defer i.Unlock()
-	for idx, p := range i.carts {
+	for idx, p := range i.coupons {
 		if p.ID == cartID && p.OwnerID == ownerID {
-			i.carts[idx] = cart
+			i.coupons[idx] = coupon
 			return nil
 		}
 	}
-	i.carts = append(i.carts, cart)
+	i.coupons = append(i.coupons, coupon)
 	return nil
 }
 
-func (i *InMemoryStore) FindCart(_ context.Context, ownerID, cartID string) (model.Cart, error) {
+func (i *InMemoryStore) FindCoupon(_ context.Context, ownerID, couponID string) (model.Coupon, error) {
 	i.RLock()
 	defer i.RUnlock()
-	for _, p := range i.carts {
-		if p.ID == cartID && p.OwnerID == ownerID {
+	for _, p := range i.coupons {
+		if p.ID == couponID && p.OwnerID == ownerID {
 			return p, nil
 		}
 	}
-	return model.Cart{}, connector.ErrCartNotFound
+	return model.Coupon{}, connector.ErrCouponNotFound
 }
